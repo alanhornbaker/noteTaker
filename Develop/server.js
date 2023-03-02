@@ -5,13 +5,15 @@ const path = require("path");
 // Require a module called “path”, and save that as “peth”, as a const.
 const fs = require("fs");
 // Require a file system.
-const util = require("util");
-// Require util
+const utils = require("utils");
+// Require util.
+const uuid = require("uuid");
+// Require uuid module to generate unique id for each note.
 //
 //
 //      1.2 - Asynchronous Processes
-const readFileAsync = util.promisify(fs.readFile);
-const writeFileAsync = util.promisify(fs.writeFile);
+const readFileAsync = utils.promisify(fs.readFile);
+const writeFileAsync = utils.promisify(fs.writeFile);
 //
 //
 //       1.3 - Setting Up Server
@@ -70,7 +72,7 @@ app.post("/api/notes", (req, res) => {
   readFileAsync("./db/db.json", "utf8")
     .then(function (data) {
       const notes = [].concat(JSON.parse(data));
-      note.id = notes.length + 1;
+      note.id = uuid.v4();
       notes.push(note);
       return notes;
     })
@@ -79,6 +81,7 @@ app.post("/api/notes", (req, res) => {
       res.json(note);
     });
 });
+
 // API "post" Request
 //
 app.delete("/api/notes/:id", (req, res) => {
