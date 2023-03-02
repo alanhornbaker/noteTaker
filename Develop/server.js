@@ -26,10 +26,9 @@ const app = express();
 //     some properties and methods,, work, etc I.E.:
 //   }
 // }
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+// const PORT = 3001;
 // Set port variable to a number.
-// Other option:
-// const port = process.env.PORT
 //
 //
 //
@@ -39,26 +38,88 @@ app.use(express.static("public"));
 //
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-// Sets up the Express app to handle data parsing (url, json).
+// Middleware that sets up the Express app to handle data parsing (url, json).
 //
-const middleware = (req, res, next) => {
-  // ANSI escape code that instructs the terminal to print in yellow
-  const yellow = "\x1b[33m%s\x1b[0m";
+// const middleware = (req, res, next) => {
+//   // ANSI escape code that instructs the terminal to print in yellow
+//   const yellow = "\x1b[33m%s\x1b[0m";
 
-  // Log out the request type and resource
-  console.log(yellow, `${req.method} request to ${req.path}`);
+//   // Log out the request type and resource
+//   console.log(yellow, `${req.method} request to ${req.path}`);
 
-  // Built-in express method to call the next middleware in the stack.
-  next();
-};
-app.use(middleware);
+//   // Built-in express method to call the next middleware in the stack.
+//   next();
+// };
+//Custom Middleware
+
+// app.use(middleware);
 // Calls middleware.
 //
 //
-//       1.5 - API Route ~ "GET" Request
+//         1.5 - API Routes
 app.get("/api/notes", (req, res) => {
-  readFileAsync("./develop/db/db.json", "utf8").then(function (data) {
+  readFileAsync("./db/db.json", "utf8").then(function (data) {
     notes = [].concat(JSON.parse(data));
     res.json(notes);
   });
+});
+// API "get" Request
+//
+app.post("/api/notes", (req, res) => {
+  const note = req.body;
+  readFileAsync("./db/db.json", "utf8")
+    .then(function (data) {
+      const notes = [].concat(JSON.parse(data));
+      note.id = notes.length + 1;
+      notes.push(note);
+      return notes;
+    })
+    .then(function (notes) {
+      writeFileAsync("./db/db.json", JSON.stringify(notes));
+      res.json(note);
+    });
+});
+// API "post" Request
+//
+app.delete("/api/notes/:id", (req, res) => {
+  const idToDelete = parseInt(req.params.id);
+  readFileAsync("./db/db.json", "utf8")
+    .then(function (data) {
+      const notes = [].concat(JSON.parse(data));
+      const newNotesData = [];
+      for (let i = 0; i < notes.length; i++) {
+        if (idToDelete !== notes[i].id) {
+          newNotesData.push(notes[i]);
+        }
+      }
+      return newNotesData;
+    })
+    .then(function (notes) {
+      writeFileAsync("./db/db.json", JSON.stringify(notes));
+      res.send("Success!");
+    });
+});
+// API "delete" Request
+//
+//
+//         1.6 - HTML Routes
+app.get("/notes", (req, res) => {
+  res.sendFile(path.join(__dirname, "./public/notes.html"));
+});
+//
+//
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./public/index.html"));
+});
+//
+//
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "./public/index.html"));
+});
+//
+//
+//
+//         1.7 - Listening
+app.listen(PORT, () => {
+  console.log(`Example app listening at http://localhost:${PORT}`);
 });
